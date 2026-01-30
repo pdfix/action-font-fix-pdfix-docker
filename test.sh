@@ -55,11 +55,11 @@ else
 fi
 
 info "Test #03: Fix missing unicode"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE fix-missing-unicode -i examples/7.21.7-t02-fail-a.pdf -o $TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf> /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE fix-missing-unicode -i examples/7.21.7-t02-fail-a.pdf -o $TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf" ]; then
     success "passed"
 else
-    error "fix missing unicode failed on examples/7.21.7-t02-fail-a.pdf
+    error "fix missing unicode failed on examples/7.21.7-t02-fail-a.pdf"
     EXIT_STATUS=1
 fi
 
