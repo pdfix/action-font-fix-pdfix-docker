@@ -122,7 +122,7 @@ class FixFontGlyphsUnicodesPdfix:
         self.engine: str = engine
         self.default_character: str = default_character
         self.cached_renders: dict[int, Path] = {}
-        self.font_info: dict[str, tuple[PdfFont, set[int]]] = {}
+        # self.font_info: dict[str, tuple[PdfFont, set[int]]] = {}
 
     def fix_missing_unicode(self) -> None:
         """
@@ -146,7 +146,7 @@ class FixFontGlyphsUnicodesPdfix:
             try:
                 # Fix missing unicodes in the embedded fonts from the document
                 missing_glyphs: dict[str, MissingGlyph] = self._gather_all_missing_occurences(pdfix, doc)
-                self._verify_font(missing_glyphs)
+                # self._debug_all_fonts_info(missing_glyphs)
                 self._process_all_missing_occurences(pdfix, doc, missing_glyphs)
                 self._clean_up_rendered_pages()
 
@@ -216,7 +216,7 @@ class FixFontGlyphsUnicodesPdfix:
                         for char_index in range(num_chars):
                             char_code: int = text.GetCharCode(char_index)
                             char_text: str = text.GetCharText(char_index)
-                            self._add_info(font, char_code)
+                            # self._add_info(font, char_code)
                             if not self._should_char_be_ocr(char_text):
                                 # Glyph has unicode assigned, go to next character
                                 continue
@@ -337,7 +337,7 @@ class FixFontGlyphsUnicodesPdfix:
             return self.default_character
 
         most_common_result: str = max(results, key=results.count)
-        # print(f"Results: {results} -> {most_common_result}")
+        print(f"OCR Results: {results} -> {most_common_result} (Chosen character)")
         return most_common_result
 
     def _get_pdf_page_render(self, pdfix: Pdfix, page_index: int, page: PdfPage) -> Path:
@@ -432,20 +432,20 @@ class FixFontGlyphsUnicodesPdfix:
         for value in self.cached_renders.values():
             os.remove(value)
 
-    def _add_info(self, font: PdfFont, char_code: int) -> None:
-        name: str = font.GetFontName()
+    # def _add_info(self, font: PdfFont, char_code: int) -> None:
+    #     name: str = font.GetFontName()
 
-        if name in self.font_info:
-            self.font_info[name][1].add(char_code)
-        else:
-            self.font_info[name] = (font, {char_code})
+    #     if name in self.font_info:
+    #         self.font_info[name][1].add(char_code)
+    #     else:
+    #         self.font_info[name] = (font, {char_code})
 
-    def _verify_font(self, missing_glyphs: dict[str, MissingGlyph]) -> None:
-        for font_name, data in self.font_info.items():
-            font: PdfFont = data[0]
-            char_codes: set[int] = data[1]
-            for char_code in char_codes:
-                key: str = f"{font_name}{char_code}"
-                character: str = font.GetUnicodeFromCharcode(char_code)
-                is_missing: bool = key in missing_glyphs
-                print(f"{font_name} - {char_code} - '{character}' - Missing: {is_missing}")
+    # def _debug_all_fonts_info(self, missing_glyphs: dict[str, MissingGlyph]) -> None:
+    #     for font_name, data in self.font_info.items():
+    #         font: PdfFont = data[0]
+    #         char_codes: set[int] = data[1]
+    #         for char_code in char_codes:
+    #             key: str = f"{font_name}{char_code}"
+    #             character: str = font.GetUnicodeFromCharcode(char_code)
+    #             is_missing: bool = key in missing_glyphs
+    #             print(f"{font_name} - {char_code} - '{character}' - Missing: {is_missing}")
