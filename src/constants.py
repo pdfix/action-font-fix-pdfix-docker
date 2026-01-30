@@ -1,0 +1,5 @@
+CONFIG_FILE = "config.json"
+DOCKER_IMAGE = "pdfix/fix-font-pdfix"
+EASY_OCR = "Easy"
+RAPID_OCR = "Rapid"
+TESSERACT_OCR = "Tesseract"
