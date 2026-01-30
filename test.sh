@@ -20,15 +20,6 @@ error() { echo -e "${RED}ERROR: $1${NC}"; }
 # init
 pushd "$(dirname $0)" > /dev/
 
-# Check if .env file exists
-if [ -f $(pwd)/.env ]; then
-    info "License info found, proceeding"
-else
-    error "License file '.env' is required in current folder. Exiting..."
-    popd > /dev/null
-    exit 1
-fi
-
 EXIT_STATUS=0
 DOCKER_IMAGE="font-fix-pdfix:test"
 PLATFORM="--platform linux/amd64"
