@@ -185,7 +185,7 @@ verification_cli += " --input /data/${input} --output /data/${output}"
 # Check .env
 test_folder: Path = Path(__file__).parent
 this_project_path: Path = test_folder.parent
-example_path: Path = this_project_path.joinpath("pimco")  # ("examples")
+example_path: Path = this_project_path.joinpath("examples")
 projects_path: Path = this_project_path.parent
 error_output_folder: Path = test_folder.joinpath("output")
 error_output_folder.mkdir(exist_ok=True)

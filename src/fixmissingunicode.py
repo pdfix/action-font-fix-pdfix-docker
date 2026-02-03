@@ -278,13 +278,14 @@ class FixFontGlyphsUnicodesPdfix:
             locations: list[CharLocation] = value.locations
             locations.sort(key=lambda x: x.height, reverse=True)
             # print(value.str())
-            new_char: str = self._ocr_missing_glyph(pdfix, doc, locations, ocr)
-            print(f"Setting '{new_char}' to {value.font.GetFontName()} char_code: {value.char_code}")
+            new_char: str = self._ocr_missing_glyph(pdfix, doc, locations, ocr, value)
             if not value.font.SetUnicodeForCharcode(value.char_code, new_char):
                 sdk_error = get_latest_sdk_error(pdfix)
                 print(f"Failed to set {new_char} to charcode {value.char_code}: {sdk_error}")
 
-    def _ocr_missing_glyph(self, pdfix: Pdfix, doc: PdfDoc, locations: list[CharLocation], ocr: OCR) -> str:
+    def _ocr_missing_glyph(
+        self, pdfix: Pdfix, doc: PdfDoc, locations: list[CharLocation], ocr: OCR, missing_glyph: MissingGlyph
+    ) -> str:
         """
         Goes through top 5 (biggest height) locations of glyph in document and renders them, sends them to OCR, takes
         most probable character value and returns it.
@@ -294,6 +295,7 @@ class FixFontGlyphsUnicodesPdfix:
             doc (PdfDoc): Opened PDF document.
             locations (list[CharLocation]): List of locations of character.
             ocr (OCR): OCR engines.
+            missing_glyph (MissingGlyph): Information about font and which character is being OCR.
         """
         max_count: int = 5
         results: list[str] = []
@@ -336,9 +338,16 @@ class FixFontGlyphsUnicodesPdfix:
         if len(results) == 0:
             return self.default_character
 
-        most_common_result: str = max(results, key=results.count)
-        print(f"OCR Results: {results} -> {most_common_result} (Chosen character)")
-        return most_common_result
+        char_result: str = max(results, key=results.count)
+        font_name: str = missing_glyph.font.GetFontName()
+        char_code: int = missing_glyph.char_code
+        # print(f"OCR Results: {results} -> {char_result} (Chosen character)")
+        # print(f"Setting '{char_result}' to {font_name} char_code: {char_code}")
+        print(
+            f"From OCR results: {char_result} character: '{results}' was chosen"
+            + f" for font: '{font_name}' at place {char_code} (char_code)."
+        )
+        return char_result
 
     def _get_pdf_page_render(self, pdfix: Pdfix, page_index: int, page: PdfPage) -> Path:
         """
