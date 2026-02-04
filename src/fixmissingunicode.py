@@ -252,6 +252,10 @@ class FixFontGlyphsUnicodesPdfix:
         if character == "":
             return True
 
+        # Long strings should not be OCR and aren't what break clause 7.27.1
+        if len(character) != 1:
+            return False
+
         number: int = ord(character)
 
         # U+FFFE is 65534, U+FEFF is 65279

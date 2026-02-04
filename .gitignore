@@ -31,5 +31,6 @@ test/output/
 easyocr_models
 
 # Additional folders to ignore
+test-pdfs
 pdfix-batch
 pimco
