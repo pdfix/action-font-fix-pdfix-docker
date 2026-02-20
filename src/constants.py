@@ -1,5 +1,7 @@
 CONFIG_FILE = "config.json"
-DOCKER_IMAGE = "pdfix/fix-font-pdfix"
+DOCKER_NAMESPACE = "pdfix"
+DOCKER_REPOSITORY = "fix-font-pdfix"
+DOCKER_IMAGE = f"{DOCKER_NAMESPACE}/{DOCKER_REPOSITORY}"
 EASY_OCR = "Easy"
 RAPID_OCR = "Rapid"
 TESSERACT_OCR = "Tesseract"
