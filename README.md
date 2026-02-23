@@ -1,6 +1,6 @@
 # Font Fixing Using PDFix SDK
 
-A Docker image that fixes missing glyph unicodes in embedded fonts in PDF document.
+Automatically detects and fixes issues related to ISO 14289-1:2014, Clause 7.21.7 (Unicode character mapping requirements). It ensures that all text content has valid and complete Unicode mapping by repairing missing ToUnicode CMaps and applying OCR-based text reconstruction when Unicode information is absent, guaranteeing reliable text extraction and accessibility compliance.
 
 ## Table of Contents
 

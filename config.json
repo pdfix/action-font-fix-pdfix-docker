@@ -5,7 +5,7 @@
         {
             "title": "Fix Missing Unicode (PDFix)",
             "name": "pdfix_generate_missing_unicode",
-            "desc": "Automatically generate missing unicode for character glyphs using PDFix SDK and OCR [Local]",
+            "desc": "Automatically detects and fixes issues related to ISO 14289-1:2014, Clause 7.21.7 (Unicode character mapping requirements). It ensures that all text content has valid and complete Unicode mapping by repairing missing ToUnicode CMaps and applying OCR-based text reconstruction when Unicode information is absent, guaranteeing reliable text extraction and accessibility compliance. [Local]",
             "version": "v0.0.0",
             "icon": "font_missing_unicode",
             "category": "Fonts",
