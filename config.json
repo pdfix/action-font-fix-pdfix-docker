@@ -63,7 +63,8 @@
                 "23": "Failed to render PDF Page into image.",
                 "24": "Failed to open PDF document.",
                 "25": "Failed to save PDF document."
-            }
+            },
+            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
         }
     ]
 }

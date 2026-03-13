@@ -17,6 +17,7 @@ from pdfixsdk import (
     kPdsPageText,
     kSaveFull,
 )
+from tqdm import tqdm
 
 from constants import EASY_OCR, RAPID_OCR, TESSERACT_OCR
 from exceptions import PdfixFailedToOpenException, PdfixFailedToSaveException, PdfixInitializeException
@@ -130,35 +131,60 @@ class FixFontGlyphsUnicodesPdfix:
         If they don't it cuts part of PDF page and uses OCR to find out what is that character and saves it into
         embedded font information.
         """
-        pdfix: Optional[Pdfix] = GetPdfix()
-        if pdfix is None:
-            raise PdfixInitializeException()
+        with tqdm(total=100) as progress_bar:
+            progress_bar.set_description("Initializing")
 
-        try:
-            # Try to authorize PDFix SDK
-            authorize_sdk(pdfix, self.license_name, self.license_key)
-
-            # Open the document
-            doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_file_str_path, "")
-            if doc is None:
-                raise PdfixFailedToOpenException(pdfix, self.input_file_str_path)
+            pdfix: Optional[Pdfix] = GetPdfix()
+            if pdfix is None:
+                raise PdfixInitializeException()
 
             try:
-                # Fix missing unicodes in the embedded fonts from the document
-                missing_glyphs: dict[str, MissingGlyph] = self._gather_all_missing_occurences(pdfix, doc)
-                # self._debug_all_fonts_info(missing_glyphs)
-                self._process_all_missing_occurences(pdfix, doc, missing_glyphs)
-                self._clean_up_rendered_pages()
+                # Try to authorize PDFix SDK
+                authorize_sdk(pdfix, self.license_name, self.license_key)
 
-                # Save the processed document
-                if not doc.Save(self.output_file_str_path, kSaveFull):
-                    raise PdfixFailedToSaveException(pdfix, self.output_file_str_path)
+                # Open the document
+                doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_file_str_path, "")
+                if doc is None:
+                    raise PdfixFailedToOpenException(pdfix, self.input_file_str_path)
+
+                try:
+                    progress_bar.update(10)
+                    progress_bar.set_description("Scanning document")
+                    progress_bar.refresh()
+
+                    # Fix missing unicodes in the embedded fonts from the document
+                    missing_glyphs: dict[str, MissingGlyph] = self._gather_all_missing_occurences(
+                        pdfix, doc, progress_bar, 40
+                    )
+                    # self._debug_all_fonts_info(missing_glyphs)
+
+                    progress_bar.n = 50
+                    progress_bar.set_description("Fixing fonts")
+                    progress_bar.refresh()
+
+                    self._process_all_missing_occurences(pdfix, doc, missing_glyphs, progress_bar, 40)
+
+                    progress_bar.n = 90
+                    progress_bar.set_description("Saving document")
+                    progress_bar.refresh()
+
+                    self._clean_up_rendered_pages()
+
+                    # Save the processed document
+                    if not doc.Save(self.output_file_str_path, kSaveFull):
+                        raise PdfixFailedToSaveException(pdfix, self.output_file_str_path)
+                finally:
+                    doc.Close()
             finally:
-                doc.Close()
-        finally:
-            pdfix.Destroy()
+                pdfix.Destroy()
 
-    def _gather_all_missing_occurences(self, pdfix: Pdfix, doc: PdfDoc) -> dict[str, MissingGlyph]:
+            progress_bar.n = 100
+            progress_bar.set_description("Done")
+            progress_bar.refresh()
+
+    def _gather_all_missing_occurences(
+        self, pdfix: Pdfix, doc: PdfDoc, progress_bar: tqdm, total_units: float
+    ) -> dict[str, MissingGlyph]:
         """
         Goes though text on all PDF pages of PDF document and gather all occurences where emebedded font is missing
         glyph unicode and at which places.
@@ -166,12 +192,15 @@ class FixFontGlyphsUnicodesPdfix:
         Args:
             pdfix (Pdfix): SDK to be able to call API.
             doc (PdfDoc): Opened PDF document.
+            progress_bar (tqdm): Progress bar.
+            total_units (float): Total units to fill in this section for progress bar.
 
         Returns:
             Dictionary containing all missing glyphs.
         """
         missing_glyphs: dict[str, MissingGlyph] = {}
         page_count: int = doc.GetNumPages()
+        step: float = float(page_count) / total_units
 
         for page_index in range(page_count):
             page: Optional[PdfPage] = doc.AcquirePage(page_index)
@@ -232,6 +261,8 @@ class FixFontGlyphsUnicodesPdfix:
             finally:
                 page.Release()
 
+            progress_bar.update(step)
+
         return missing_glyphs
 
     def _should_char_be_ocr(self, character: str) -> bool:
@@ -265,7 +296,7 @@ class FixFontGlyphsUnicodesPdfix:
         return False
 
     def _process_all_missing_occurences(
-        self, pdfix: Pdfix, doc: PdfDoc, missing_glyphs: dict[str, MissingGlyph]
+        self, pdfix: Pdfix, doc: PdfDoc, missing_glyphs: dict[str, MissingGlyph], progress_bar: tqdm, total_units: float
     ) -> None:
         """
         Go through all missing glyphs and for each makes couple of images and tries to OCR them. Also assigns all
@@ -275,8 +306,11 @@ class FixFontGlyphsUnicodesPdfix:
             pdfix (Pdfix): Pdfix SDK.
             doc (PdfDoc): Opened PDF document.
             missing_glyphs (dict[str, MissingGlyph]): Dictionary containing all missing glyphs for processing.
+            progress_bar (tqdm): Progress bar.
+            total_units (float): Total units to fill in this section for progress bar.
         """
         ocr: OCR = OCR(self.default_character)
+        step: float = float(len(missing_glyphs)) / total_units
 
         for value in missing_glyphs.values():
             locations: list[CharLocation] = value.locations
@@ -286,6 +320,8 @@ class FixFontGlyphsUnicodesPdfix:
             if not value.font.SetUnicodeForCharcode(value.char_code, new_char):
                 sdk_error = get_latest_sdk_error(pdfix)
                 print(f"Failed to set {new_char} to charcode {value.char_code}: {sdk_error}")
+
+            progress_bar.update(step)
 
     def _ocr_missing_glyph(
         self, pdfix: Pdfix, doc: PdfDoc, locations: list[CharLocation], ocr: OCR, missing_glyph: MissingGlyph
