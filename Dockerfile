@@ -31,6 +31,10 @@ COPY easyocr_models/ /usr/font-fix/easyocr_models
 COPY config.json /usr/font-fix/
 COPY src/ /usr/font-fix/src/
 
+
+LABEL license="https://pdfix.net/terms (PDFix SDK)"
+
+
 # Debug use "-u" for unbuffered console output (if segmentation fault happens)
 # ENTRYPOINT ["/usr/font-fix/venv/bin/python3", "-u", "/usr/font-fix/src/main.py"]
 ENTRYPOINT ["/usr/font-fix/venv/bin/python3", "/usr/font-fix/src/main.py"]
