@@ -1,57 +1,71 @@
-# Font Fixing Using PDFix SDK
+# Font Fix (PDFix)
 
-Automatically detects and fixes issues related to ISO 14289-1:2014, Clause 7.21.7 (Unicode character mapping requirements). It ensures that all text content has valid and complete Unicode mapping by repairing missing ToUnicode CMaps and applying OCR-based text reconstruction when Unicode information is absent, guaranteeing reliable text extraction and accessibility compliance.
+Fixes font issues where Unicode is missing for glyphs using OCR and the PDFix SDK. Requires a PDFix Desktop license to run.
 
 ## Table of Contents
 
-- [Font Fixing Using PDFix SDK](#font-fixing-using-pdfix-sdk)
-  - [Table of Contents](#table-of-contents)
-  - [Getting Started](#getting-started)
-  - [Run a Docker Container ](#run-docker-container)
-    - [Run Docker Container for Font Fixing](#run-docker-container-for-font-fixing)
-      - [Return codes](#return-codes)
-    - [Exporting Configuration for Integration](#exporting-configuration-for-integration)
-  - [License](#license)
-  - [Help \& Support](#help--support)
+- [Font Fix (PDFix)](#font-fix-pdfix)
+  - [Getting started](#getting-started)
+  - [Usage](#usage)
+  - [Commands](#commands)
+  - [Arguments](#arguments)
+  - [Examples](#examples)
+  - [Help \& support](#help--support)
+  - [Licenses](#licenses)
 
-## Getting Started
+## Getting started
 
-To use this Docker application, you'll need to have Docker installed on your system. If Docker is not installed, please follow the instructions on the [official Docker website](https://docs.docker.com/get-docker/) to install it.
+You need Docker installed. The first run downloads the image and may take longer than later runs.
 
-## Run a Docker Container
+## Usage
 
-The first run will pull the docker image, which may take some time. Make your own image for more advanced use.
-
-### Run Docker Container for Font Fixing
-
-To run docker container as CLI you should share the folder with PDF to process using `-v` parameter. In this example it's current folder.
+Mount a folder into the container and run a subcommand:
 
 ```bash
-docker run -v $(pwd):/data -w /data --rm pdfix/font-fix-pdfix:latest fix-missing-unicode -i /data/input.pdf -o /data/output.pdf
+docker run --rm -v "$(pwd)":/data -w /data pdfix/font-fix-pdfix:latest <command> [options]
 ```
 
-If you want to use other OCR engine then default Tesseract OCR use parameter `--engine` with one of values `Easy` for Easy OCR or `Rapid` for Rapid OCR.
-If you want to fill other then space character when OCR fails to recognize character you can set it using parameter `--default_char` followed by your desired character.
+## Commands
 
-For more detailed information about the available command-line arguments, you can run the following command:
+- `fix-missing-unicode`: Repair missing Unicode mappings in embedded fonts (PDF → PDF)
+
+## Arguments
+
+### `fix-missing-unicode`
+
+| Option | Required | Type / expected value | Description |
+|---|:---:|---|---|
+| `--input`, `-i` | yes | Path to an existing `.pdf` file | Input PDF |
+| `--output`, `-o` | yes | Path for the output `.pdf` file | Output PDF |
+| `--name` | no | String (PDFix account license name) | PDFix license name |
+| `--key` | no | String (PDFix account license key) | PDFix license key |
+| `--engine` | no | One of: `Tesseract`, `Easy`, `Rapid` (default: `Tesseract`) | OCR engine |
+| `--default_char` | no | Single character string (default: space) | Character when OCR fails |
+
+## Examples
+
+Fix missing Unicode mappings (license recommended to avoid watermarks):
 
 ```bash
-docker run --rm pdfix/font-fix-pdfix:latest --help
+docker run --rm -v "$(pwd)":/data -w /data pdfix/font-fix-pdfix:latest \
+  fix-missing-unicode --name "${LICENSE_NAME}" --key "${LICENSE_KEY}" \
+  -i /data/input.pdf -o /data/output.pdf
 ```
 
-### Exporting Configuration for Integration
-
-To export the configuration JSON file, use the following command:
+Use a different OCR engine and fallback character:
 
 ```bash
-docker run -v $(pwd):/data -w /data --rm pdfix/font-fix-pdfix:latest config -o config.json
+docker run --rm -v "$(pwd)":/data -w /data pdfix/font-fix-pdfix:latest \
+  fix-missing-unicode -i /data/input.pdf -o /data/output.pdf \
+  --engine Easy --default_char "?"
 ```
 
-## License
+## Help & support
 
-- [PDFix SDK](https://pdfix.net/terms)
+For PDFix SDK licensing or issues, contact `support@pdfix.net`.
 
-## Help & Support
+## Licenses
 
-To report an issue please contact us at support@pdfix.net.
-For more information visit https://pdfix.net
+- [PDFix Terms](https://pdfix.net/terms)
+
+Trial versions of the PDFix SDK may apply watermarks and redact random content in the output PDF.
