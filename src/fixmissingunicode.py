@@ -50,7 +50,12 @@ class CharLocation:
         return abs(self.bbox.top - self.bbox.bottom)
 
     def str(self) -> str:
-        bbox_area: tuple[int, int, int, int] = (self.bbox.left, self.bbox.top, self.bbox.right, self.bbox.bottom)
+        bbox_area: tuple[float, float, float, float] = (
+            self.bbox.left,
+            self.bbox.top,
+            self.bbox.right,
+            self.bbox.bottom,
+        )
         return f"Location: Page: {self.page_index + 1}, BBox: {bbox_area}, Height: {self.height}"
 
 
