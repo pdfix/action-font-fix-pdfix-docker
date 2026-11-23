@@ -81,7 +81,11 @@ class MissingGlyph:
         self.font: PdfFont = font
         self.char_code: int = char_code
         self.locations: list[CharLocation] = []
-        self.key: str = f"{font.GetFontName()}{char_code}"
+        # Different font objects can have the same name (e.g. pages merged from copies of one document),
+        # so the font object decides which glyphs are the same
+        font_object_id: int = font.GetObject().GetId()
+        font_key: str = str(font_object_id) if font_object_id > 0 else font.GetFontName()
+        self.key: str = f"{font_key}_{char_code}"
 
     def add_location(self, location: CharLocation) -> None:
         """
