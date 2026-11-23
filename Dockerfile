@@ -5,7 +5,9 @@ FROM debian:stable-slim
 RUN apt-get update && \
     apt-get install -y \
     libgl1 \
-    tesseract-ocr-all \
+    # Only English is used for OCR of single characters
+    tesseract-ocr \
+    tesseract-ocr-eng \
     python3 \
     python3-pip \
     python3-venv \
