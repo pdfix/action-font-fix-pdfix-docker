@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # This is local docker test during build and push action.
+# Usage: ./test.sh [<PDFIX_NAME> <PDFIX_KEY>] (without license the fix test runs as PDFix SDK trial)
 
 # Colors for output into console
 GREEN='\033[0;32m'
@@ -24,6 +25,8 @@ EXIT_STATUS=0
 DOCKER_IMAGE="font-fix-pdfix:test"
 PLATFORM="--platform linux/amd64"
 TEMPORARY_DIRECTORY=".test"
+PDFIX_NAME=$1
+PDFIX_KEY=$2
 
 info "Building docker image..."
 docker build $PLATFORM -t $DOCKER_IMAGE .
@@ -33,8 +36,8 @@ if [ -d "$(pwd)/$TEMPORARY_DIRECTORY" ]; then
 fi
 mkdir -p $(pwd)/$TEMPORARY_DIRECTORY
 
-info "List files in /usr/fontfixing"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data --entrypoint ls $DOCKER_IMAGE /usr/fontfixing/
+info "List files in /usr/font-fix"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data --entrypoint ls $DOCKER_IMAGE /usr/font-fix/
 
 info "Test #01: Show help"
 docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE --help > /dev/null
@@ -55,7 +58,7 @@ else
 fi
 
 info "Test #03: Fix missing unicode"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE fix-missing-unicode -i examples/7.21.7-t02-fail-a.pdf -o $TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE fix-missing-unicode --name "$PDFIX_NAME" --key "$PDFIX_KEY" -i examples/7.21.7-t02-fail-a.pdf -o $TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/7.21.7-t02-fail-a-fixed.pdf" ]; then
     success "passed"
 else

@@ -81,7 +81,7 @@ jobs:
           sudo apt-get remove -y python3 || true
 
       - name: Run tests
-        run: chmod +x test.sh && ./test.sh
+        run: chmod +x test.sh && ./test.sh "${{ secrets.PDFIX_LICENSE_NAME }}" "${{ secrets.PDFIX_LICENSE_KEY }}"
 
       - name: Clean all that can be cleaned for Docker
         run: |
