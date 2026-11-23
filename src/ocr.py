@@ -15,6 +15,8 @@ logger: logging.Logger = get_logger("app_logger")
 # used.
 #   super().__init__(loader)
 warnings.filterwarnings("ignore", message=".*pin_memory.*")
+# EasyOCR model uses quantized torch tensors; torch warns that they are deprecated on every run
+warnings.filterwarnings("ignore", message=".*quantize_per_tensor.*")
 
 
 class OCR:
