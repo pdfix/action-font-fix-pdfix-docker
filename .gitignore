@@ -34,3 +34,6 @@ easyocr_models
 test-pdfs
 pdfix-batch
 pimco
+
+# Local unit tests
+tests/
