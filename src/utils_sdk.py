@@ -3,7 +3,7 @@ from typing import Optional
 
 from pdfixsdk import Pdfix, PsAccountAuthorization, PsStandardAuthorization
 
-from exceptions import PdfixActivationException, PdfixAuthorizationException
+from exceptions import PdfixActivationException, PdfixAuthorizationException, format_sdk_error
 from logger import get_logger
 
 logger: logging.Logger = get_logger("app_logger")
@@ -40,6 +40,4 @@ def get_latest_sdk_error(pdfix: Pdfix) -> str:
     Returns:
         Error message with error code.
     """
-    error_code: int = pdfix.GetErrorType()
-    error: str = str(pdfix.GetError())
-    return f"SDK Error {error_code}: {error}"
+    return format_sdk_error(pdfix)
