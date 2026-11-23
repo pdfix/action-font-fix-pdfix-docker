@@ -207,7 +207,8 @@ class FixFontGlyphsUnicodesPdfix:
         """
         missing_glyphs: dict[str, MissingGlyph] = {}
         page_count: int = doc.GetNumPages()
-        step: float = float(page_count) / total_units
+        # Each page fills the same part of this section
+        step: float = total_units / page_count if page_count > 0 else 0.0
 
         for page_index in range(page_count):
             page: Optional[PdfPage] = doc.AcquirePage(page_index)
@@ -215,6 +216,7 @@ class FixFontGlyphsUnicodesPdfix:
             if page is None:
                 sdk_error: str = get_latest_sdk_error(pdfix)
                 logger.warning(f"Failed to open page {page_index + 1}: {sdk_error}")
+                progress_bar.update(step)
                 continue
 
             try:
@@ -267,8 +269,7 @@ class FixFontGlyphsUnicodesPdfix:
                             missing_glyphs[dictionary_key].add_location(location)
             finally:
                 page.Release()
-
-            progress_bar.update(step)
+                progress_bar.update(step)
 
         return missing_glyphs
 
@@ -317,7 +318,8 @@ class FixFontGlyphsUnicodesPdfix:
             total_units (float): Total units to fill in this section for progress bar.
         """
         ocr: OCR = OCR(self.engine)
-        step: float = float(len(missing_glyphs)) / total_units
+        # Each glyph fills the same part of this section
+        step: float = total_units / len(missing_glyphs) if len(missing_glyphs) > 0 else 0.0
 
         for value in missing_glyphs.values():
             locations: list[CharLocation] = value.locations
