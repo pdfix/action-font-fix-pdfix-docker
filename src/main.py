@@ -8,7 +8,13 @@ from pathlib import Path
 from typing import Optional
 
 from constants import CONFIG_FILE, EASY_OCR, RAPID_OCR, TESSERACT_OCR
-from exceptions import EC_ARG_GENERAL, MESSAGE_ARG_GENERAL, ArgumentInputPdfOutputPdfException, ExpectedException
+from exceptions import (
+    EC_ARG_GENERAL,
+    MESSAGE_ARG_GENERAL,
+    ArgumentOutputExtensionException,
+    ArgumentOutputFolderNotExistsException,
+    ExpectedException,
+)
 from fixmissingunicode import FixFontGlyphsUnicodesPdfix
 from image_update import DockerImageContainerUpdateChecker
 from logger import get_logger
@@ -55,6 +61,21 @@ def set_arguments(
                 parser.add_argument("--output", "-o", type=str, required=required_output, help=output_help)
 
 
+def check_output_file(output_path: str) -> None:
+    """
+    Check the output file extension and that its folder exists before any processing.
+
+    Args:
+        output_path (str): Path to the output PDF document.
+    """
+    if Path(output_path).suffix.lower() != ".pdf":
+        raise ArgumentOutputExtensionException()
+
+    output_folder: Path = Path(output_path).resolve().parent
+    if not output_folder.is_dir():
+        raise ArgumentOutputFolderNotExistsException(output_folder.as_posix())
+
+
 def run_config_subcommand(args) -> None:
     get_pdfix_config(args.output)
 
@@ -78,6 +99,7 @@ def get_pdfix_config(path: str) -> None:
 
 
 def run_fontfixing_subcommand(args) -> None:
+    check_output_file(args.output)
     font_fixing(args.input, args.output, args.name, args.key, args.engine, args.default_char)
 
 
@@ -100,13 +122,10 @@ def font_fixing(
         engine (str): Name of OCR enginge.
         default_char (str): Which character to use when OCR fails.
     """
-    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        fixer: FixFontGlyphsUnicodesPdfix = FixFontGlyphsUnicodesPdfix(
-            license_name, license_key, input_path, output_path, engine, default_char
-        )
-        fixer.fix_missing_unicode()
-    else:
-        raise ArgumentInputPdfOutputPdfException()
+    fixer: FixFontGlyphsUnicodesPdfix = FixFontGlyphsUnicodesPdfix(
+        license_name, license_key, input_path, output_path, engine, default_char
+    )
+    fixer.fix_missing_unicode()
 
 
 def main() -> None:

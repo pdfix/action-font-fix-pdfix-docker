@@ -1,7 +1,8 @@
 from pdfixsdk import Pdfix
 
 EC_ARG_GENERAL: int = 10
-EC_ARG_INPUT_PDF_OUTPUT_PDF: int = 11
+EC_ARG_OUTPUT_EXTENSION: int = 11
+EC_ARG_OUTPUT_FOLDER_NOT_EXISTS: int = 12
 
 EC_PDFIX_INITIALIZE: int = 20
 EC_PDFIX_ACTIVATION_FAILED: int = 21
@@ -11,7 +12,8 @@ EC_PDFIX_FAILED_TO_OPEN: int = 24
 EC_PDFIX_FAILED_TO_SAVE: int = 25
 
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
-MESSAGE_ARG_INPUT_PDF_OUTPUT_PDF: str = "Input and output file must be PDF documents."
+MESSAGE_ARG_OUTPUT_NOT_PDF: str = "Output file must be PDF document."
+MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS: str = "Output folder does not exist."
 
 MESSAGE_PDFIX_INITIALIZE: str = "Failed to initialize PDFix SDK."
 MESSAGE_PDFIX_ACTIVATION_FAILED: str = "Failed to activate PDFix SDK account."
@@ -57,9 +59,14 @@ class ArgumentException(ExpectedException):
         self._add_note(message)
 
 
-class ArgumentInputPdfOutputPdfException(ArgumentException):
+class ArgumentOutputExtensionException(ArgumentException):
     def __init__(self) -> None:
-        super().__init__(MESSAGE_ARG_INPUT_PDF_OUTPUT_PDF, EC_ARG_INPUT_PDF_OUTPUT_PDF)
+        super().__init__(MESSAGE_ARG_OUTPUT_NOT_PDF, EC_ARG_OUTPUT_EXTENSION)
+
+
+class ArgumentOutputFolderNotExistsException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS} {path}", EC_ARG_OUTPUT_FOLDER_NOT_EXISTS)
 
 
 class PdfixInitializeException(ExpectedException):
