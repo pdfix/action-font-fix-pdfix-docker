@@ -20,7 +20,6 @@ from pdfixsdk import (
 )
 from tqdm import tqdm
 
-from constants import EASY_OCR, RAPID_OCR, TESSERACT_OCR
 from exceptions import PdfixFailedToOpenException, PdfixFailedToSaveException, PdfixInitializeException
 from logger import get_logger
 from ocr import OCR
@@ -100,10 +99,6 @@ class FixFontGlyphsUnicodesPdfix:
     """
     Class that process PDF document and assigns unicode to missing embedded font glyphs.
     """
-
-    EASY_OCR: str = EASY_OCR
-    RAPID_OCR: str = RAPID_OCR
-    TESSERACT_OCR: str = TESSERACT_OCR
 
     def __init__(
         self,
@@ -318,7 +313,7 @@ class FixFontGlyphsUnicodesPdfix:
             progress_bar (tqdm): Progress bar.
             total_units (float): Total units to fill in this section for progress bar.
         """
-        ocr: OCR = OCR(self.default_character)
+        ocr: OCR = OCR(self.engine, self.default_character)
         step: float = float(len(missing_glyphs)) / total_units
 
         for value in missing_glyphs.values():
@@ -441,7 +436,7 @@ class FixFontGlyphsUnicodesPdfix:
 
     def _ocr_character(self, image_path: Path, ocr: OCR) -> str:
         """
-        Render cut of PDF page into temporary image file. Sends this file to OCR engine.
+        Sends image file with one character to the selected OCR engine.
 
         Args:
             image_path (Path): Path to image file with character.
@@ -450,35 +445,7 @@ class FixFontGlyphsUnicodesPdfix:
         Returns:
             Character that OCR engine recognised.
         """
-        result: str = ""
-        match self.engine:
-            case self.EASY_OCR:
-                result = ocr.easy_ocr(image_path)
-            case self.RAPID_OCR:
-                result = ocr.rapid_ocr(image_path)
-            case self.TESSERACT_OCR:
-                result = ocr.tesseract_ocr(image_path)
-
-        # Fallback does not bring more functionality so it will stay disabled
-        # if result == "":
-        #     print("FALLBACK")
-        #     # Fallback
-        #     tesseract_result: str = ocr.tesseract_ocr(image_path) if self.engine == self.TESSERACT_OCR else ""
-        #     easy_result: str = ocr.easy_ocr(image_path) if self.engine == self.EASY_OCR else ""
-        #     rapid_result: str = ocr.rapid_ocr(image_path) if self.engine == self.RAPID_OCR else ""
-        #     print(f"OCR: tesseract: '{tesseract_result}' easy: '{easy_result}' rapid: '{rapid_result}'")
-
-        #     if tesseract_result != "" and tesseract_result != " ":
-        #         print(f"Fallbacked from {self.engine} to Tesseract. New result: '{tesseract_result}'")
-        #         result = tesseract_result
-        #     elif easy_result != "" and easy_result != " ":
-        #         print(f"Fallbacked from {self.engine} to Easy. New result: '{easy_result}'")
-        #         result = easy_result
-        #     elif rapid_result != "" and rapid_result != " ":
-        #         print(f"Fallbacked from {self.engine} to Rapid. New result: '{rapid_result}'")
-        #         result = rapid_result
-
-        return result
+        return ocr.recognize(image_path)
 
     def _clean_up_rendered_pages(self) -> None:
         """
