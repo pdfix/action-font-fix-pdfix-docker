@@ -23,10 +23,12 @@ from tqdm import tqdm
 from exceptions import PdfixFailedToOpenException, PdfixFailedToSaveException, PdfixInitializeException
 from logger import get_logger
 from ocr import OCR
-from page_render import crop_image, render_page
+from page_render import crop_image, is_blank_image, render_page
 from utils_sdk import authorize_sdk, get_latest_sdk_error
 
 logger: logging.Logger = get_logger("app_logger")
+
+SPACE_CHARACTER: str = " "
 
 
 class CharLocation:
@@ -45,6 +47,7 @@ class CharLocation:
         self.page_index: int = page_index
         self.bbox: PdfRect = bbox
         self.height: float = self._get_height()
+        self.width: float = abs(self.bbox.right - self.bbox.left)
 
     def _get_height(self) -> float:
         """
@@ -362,6 +365,17 @@ class FixFontGlyphsUnicodesPdfix:
 
                 with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
                     tmp_path: Path = Path(tmp.name)
+
+                    # Glyph without any ink (space) is not sent to OCR, OCR engines read it as "_" or nothing.
+                    # A space glyph often has an empty bounding box.
+                    if location.height <= 0 or location.width <= 0:
+                        results.append(SPACE_CHARACTER)
+                        continue
+                    crop_image(page_image, tmp_path, pdfix, page, location.bbox)
+                    if is_blank_image(tmp_path):
+                        results.append(SPACE_CHARACTER)
+                        continue
+
                     bbox: PdfRect = self._increase_bbox(location.bbox, 2)
 
                     # Crop it

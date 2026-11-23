@@ -21,6 +21,8 @@ from PIL import Image, ImageFile, ImageOps
 from exceptions import PdfixFailedToRenderException
 
 ZOOM: float = 4.0
+# Darkest pixel (0 black, 255 white) still counted as empty paper in a rendered glyph
+BLANK_DARKEST_PIXEL: int = 200
 
 
 def render_bbox(pdfix: Pdfix, page: PdfPage, bbox: PdfRect, temporary_file: BinaryIO) -> None:
@@ -208,3 +210,18 @@ def upscale(image_path: Path, scale: int) -> None:
 
     # Save the result
     image.save(image_path, format="JPEG", quality=100, subsampling=0)
+
+
+def is_blank_image(image_path: Path) -> bool:
+    """
+    Check if image has no ink, for example a rendered space glyph.
+
+    Args:
+        image_path (Path): Path to image file.
+
+    Returns:
+        True when no pixel is darker than BLANK_DARKEST_PIXEL.
+    """
+    with Image.open(image_path) as image:
+        darkest, _ = image.convert("L").getextrema()
+    return darkest >= BLANK_DARKEST_PIXEL
