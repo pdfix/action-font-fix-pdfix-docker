@@ -1,6 +1,6 @@
 CONFIG_FILE: str = "config.json"
 DOCKER_NAMESPACE: str = "pdfix"
-DOCKER_REPOSITORY: str = "fix-font-pdfix"
+DOCKER_REPOSITORY: str = "font-fix-pdfix"
 DOCKER_IMAGE: str = f"{DOCKER_NAMESPACE}/{DOCKER_REPOSITORY}"
 EASY_OCR: str = "Easy"
 RAPID_OCR: str = "Rapid"
