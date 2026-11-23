@@ -24,16 +24,14 @@ class OCR:
     Class that holds the selected OCR engine.
     """
 
-    def __init__(self, engine: str, default_character: str) -> None:
+    def __init__(self, engine: str) -> None:
         """
         Initialize only the selected OCR engine (EasyOCR loads torch and its models, which is slow).
 
         Args:
             engine (str): Name of OCR engine.
-            default_character (str): Which character to use when OCR fails.
         """
         self.engine: str = engine
-        self.default_character: str = default_character
         self.rapidocr: Any = None
         self.easyocr: Any = None
 
@@ -63,7 +61,7 @@ class OCR:
             path_to_image (Path): Path to image with character.
 
         Returns:
-            What character OCR found out.
+            What character OCR found out, empty when it found nothing.
         """
         if self.engine == EASY_OCR:
             return self.easy_ocr(path_to_image)
@@ -81,7 +79,7 @@ class OCR:
             path_to_image (Path): Path to image with character.
 
         Returns:
-            What character OCR found out.
+            What character OCR found out, empty when it found nothing.
         """
         try:
             # Using default language as we are doing OCR over 1 character
@@ -91,8 +89,8 @@ class OCR:
             # Return first character
             return stripped_result[0] if stripped_result != "" else ""
         except Exception:
-            logger.warning("During Tesseract OCR run, exception happened. Returning default result.")
-            return self.default_character
+            logger.warning("During Tesseract OCR run, exception happened. Returning no result.")
+            return ""
 
     def rapid_ocr(self, path_to_image: Path) -> str:
         """
@@ -102,7 +100,7 @@ class OCR:
             path_to_image (Path): Path to image with character.
 
         Returns:
-            What character OCR found out.
+            What character OCR found out, empty when it found nothing.
         """
         try:
             # Run OCR
@@ -117,10 +115,10 @@ class OCR:
             if len(output) > 0:
                 return max(output, key=lambda x: x[1])[0]
 
-            return self.default_character
+            return ""
         except Exception:
-            logger.warning("During Rapid OCR run, exception happened. Returning default result.")
-            return self.default_character
+            logger.warning("During Rapid OCR run, exception happened. Returning no result.")
+            return ""
 
     def _parse_rapid_ocr(self, result: Any) -> list[tuple[str, float]]:
         """
@@ -154,13 +152,13 @@ class OCR:
             path_to_image (Path): Path to image with character.
 
         Returns:
-            What character OCR found out.
+            What character OCR found out, empty when it found nothing.
         """
         try:
             result: list[str] = self.easyocr.readtext(path_to_image.as_posix(), detail=0)
             if len(result) > 0:
                 return result[0]
-            return self.default_character
+            return ""
         except Exception:
-            logger.warning("During Easy OCR run, exception happened. Returning default result.")
-            return self.default_character
+            logger.warning("During Easy OCR run, exception happened. Returning no result.")
+            return ""

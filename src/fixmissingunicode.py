@@ -313,7 +313,7 @@ class FixFontGlyphsUnicodesPdfix:
             progress_bar (tqdm): Progress bar.
             total_units (float): Total units to fill in this section for progress bar.
         """
-        ocr: OCR = OCR(self.engine, self.default_character)
+        ocr: OCR = OCR(self.engine)
         step: float = float(len(missing_glyphs)) / total_units
 
         for value in missing_glyphs.values():
@@ -379,12 +379,13 @@ class FixFontGlyphsUnicodesPdfix:
             finally:
                 page.Release()
 
+        font_name: str = missing_glyph.font.GetFontName()
+        char_code: int = missing_glyph.char_code
         if len(results) == 0:
+            logger.info(f"Font '{font_name}' char code {char_code}: no OCR result, using '{self.default_character}'.")
             return self.default_character
 
         char_result: str = max(results, key=results.count)
-        font_name: str = missing_glyph.font.GetFontName()
-        char_code: int = missing_glyph.char_code
         # print(f"OCR Results: {results} -> {char_result} (Chosen character)")
         # print(f"Setting '{char_result}' to {font_name} char_code: {char_code}")
         logger.info(f"Font '{font_name}' char code {char_code}: OCR results {results}, chosen '{char_result}'.")
