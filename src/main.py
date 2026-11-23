@@ -11,6 +11,7 @@ from constants import CONFIG_FILE, EASY_OCR, RAPID_OCR, TESSERACT_OCR
 from exceptions import (
     EC_ARG_GENERAL,
     MESSAGE_ARG_GENERAL,
+    ArgumentInputNotPdfException,
     ArgumentOutputExtensionException,
     ArgumentOutputFolderNotExistsException,
     ExpectedException,
@@ -76,6 +77,18 @@ def check_output_file(output_path: str) -> None:
         raise ArgumentOutputFolderNotExistsException(output_folder.as_posix())
 
 
+def check_input_file(input_path: str) -> None:
+    """
+    Check that the input is an existing PDF file before any processing.
+
+    Args:
+        input_path (str): Path to the input PDF document.
+    """
+    path: Path = Path(input_path)
+    if path.suffix.lower() != ".pdf" or not path.is_file():
+        raise ArgumentInputNotPdfException(input_path)
+
+
 def run_config_subcommand(args) -> None:
     get_pdfix_config(args.output)
 
@@ -100,6 +113,7 @@ def get_pdfix_config(path: str) -> None:
 
 def run_fontfixing_subcommand(args) -> None:
     check_output_file(args.output)
+    check_input_file(args.input)
     font_fixing(args.input, args.output, args.name, args.key, args.engine, args.default_char)
 
 
