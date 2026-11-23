@@ -1,7 +1,9 @@
 import argparse
+import logging
 import sys
 import threading
-import traceback
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -9,6 +11,9 @@ from constants import CONFIG_FILE, EASY_OCR, RAPID_OCR, TESSERACT_OCR
 from exceptions import EC_ARG_GENERAL, MESSAGE_ARG_GENERAL, ArgumentInputPdfOutputPdfException, ExpectedException
 from fixmissingunicode import FixFontGlyphsUnicodesPdfix
 from image_update import DockerImageContainerUpdateChecker
+from logger import get_logger
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 def set_arguments(
@@ -141,17 +146,17 @@ def main() -> None:
     try:
         args = parser.parse_args()
     except ExpectedException as e:
-        print(e.message, file=sys.stderr)
+        logger.error(e.message)
         sys.exit(e.error_code)
     except SystemExit as e:
         if e.code != 0:
-            print(MESSAGE_ARG_GENERAL, file=sys.stderr)
+            logger.error(MESSAGE_ARG_GENERAL)
             sys.exit(EC_ARG_GENERAL)
         # This happens when --help is used, exit gracefully
         sys.exit(0)
     except Exception as e:
-        print(traceback.format_exc(), file=sys.stderr)
-        print(f"Failed to run the program:{e}", file=sys.stderr)
+        logger.error("Failed to run the program:")
+        logger.exception(e)
         sys.exit(9)
 
     if hasattr(args, "func"):
@@ -161,17 +166,27 @@ def main() -> None:
         update_thread = threading.Thread(target=update_checker.check_for_image_updates)
         update_thread.start()
 
+        # Measure the time it takes to process the input
+        start_time: float = time.time()
+        current_time: str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        logger.info(f"Processing started at: {current_time}")
+
         # Run subcommand
         try:
             args.func(args)
         except ExpectedException as e:
-            print(e.message, file=sys.stderr)
+            logger.error(e.message)
             sys.exit(e.error_code)
         except Exception as e:
-            print(traceback.format_exc(), file=sys.stderr)
-            print(f"Failed to run the program: {e}", file=sys.stderr)
+            # not expected exception -> print stack trace and what exception happened
+            logger.error("Failed to run the program:")
+            logger.exception(e)
             sys.exit(9)
         finally:
+            elapsed_time: float = time.time() - start_time
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            logger.info(f"Processing finished at: {current_time}. Elapsed time: {elapsed_time:.2f} seconds")
+
             # Make sure to let update thread finish before exiting
             update_thread.join()
     else:

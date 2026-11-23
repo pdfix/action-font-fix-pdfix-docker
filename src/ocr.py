@@ -1,3 +1,4 @@
+import logging
 import warnings
 from pathlib import Path
 from typing import Any
@@ -6,6 +7,9 @@ import easyocr
 import pytesseract
 from rapidocr_onnxruntime import RapidOCR
 
+from logger import get_logger
+
+logger: logging.Logger = get_logger("app_logger")
 # To filter out:
 # /usr/font-fix/venv/lib/python3.13/site-packages/torch/utils/data/dataloader.py:775:
 # UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be
@@ -57,7 +61,7 @@ class OCR:
             # Return first character
             return stripped_result[0] if stripped_result != "" else ""
         except Exception:
-            print("During Tesseract OCR run, exception happened. Returning default result.")
+            logger.warning("During Tesseract OCR run, exception happened. Returning default result.")
             return self.default_character
 
     def rapid_ocr(self, path_to_image: Path) -> str:
@@ -85,7 +89,7 @@ class OCR:
 
             return self.default_character
         except Exception:
-            print("During Rapid OCR run, exception happened. Returning default result.")
+            logger.warning("During Rapid OCR run, exception happened. Returning default result.")
             return self.default_character
 
     def _parse_rapid_ocr(self, result: Any) -> list[tuple[str, float]]:
@@ -128,5 +132,5 @@ class OCR:
                 return result[0]
             return self.default_character
         except Exception:
-            print("During Easy OCR run, exception happened. Returning default result.")
+            logger.warning("During Easy OCR run, exception happened. Returning default result.")
             return self.default_character

@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -21,9 +22,12 @@ from tqdm import tqdm
 
 from constants import EASY_OCR, RAPID_OCR, TESSERACT_OCR
 from exceptions import PdfixFailedToOpenException, PdfixFailedToSaveException, PdfixInitializeException
+from logger import get_logger
 from ocr import OCR
 from page_render import crop_image, render_page
 from utils_sdk import authorize_sdk, get_latest_sdk_error
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class CharLocation:
@@ -212,7 +216,7 @@ class FixFontGlyphsUnicodesPdfix:
 
             if page is None:
                 sdk_error: str = get_latest_sdk_error(pdfix)
-                print(f"Failed to open page {page_index + 1}: {sdk_error}")
+                logger.warning(f"Failed to open page {page_index + 1}: {sdk_error}")
                 continue
 
             try:
@@ -221,7 +225,7 @@ class FixFontGlyphsUnicodesPdfix:
 
                 if content is None:
                     sdk_error = get_latest_sdk_error(pdfix)
-                    print(f"Failed to get content from PDF page: {sdk_error}")
+                    logger.warning(f"Failed to get content from PDF page: {sdk_error}")
                     continue
 
                 # Walk Objects in Content
@@ -232,7 +236,7 @@ class FixFontGlyphsUnicodesPdfix:
 
                     if obj is None:
                         sdk_error = get_latest_sdk_error(pdfix)
-                        print(f"Failed to obtain {obj_index + 1}. object: {sdk_error}")
+                        logger.warning(f"Failed to obtain {obj_index + 1}. object: {sdk_error}")
                         continue
 
                     # We are interested only in Text Objects
@@ -324,7 +328,7 @@ class FixFontGlyphsUnicodesPdfix:
             new_char: str = self._ocr_missing_glyph(pdfix, doc, locations, ocr, value)
             if not value.font.SetUnicodeForCharcode(value.char_code, new_char):
                 sdk_error = get_latest_sdk_error(pdfix)
-                print(f"Failed to set {new_char} to charcode {value.char_code}: {sdk_error}")
+                logger.warning(f"Failed to set {new_char} to charcode {value.char_code}: {sdk_error}")
 
             progress_bar.update(step)
 
@@ -354,7 +358,7 @@ class FixFontGlyphsUnicodesPdfix:
 
             if page is None:
                 sdk_error: str = get_latest_sdk_error(pdfix)
-                print(f"Failed to open page {location.page_index + 1}: {sdk_error}")
+                logger.warning(f"Failed to open page {location.page_index + 1}: {sdk_error}")
                 continue
 
             try:
@@ -388,10 +392,7 @@ class FixFontGlyphsUnicodesPdfix:
         char_code: int = missing_glyph.char_code
         # print(f"OCR Results: {results} -> {char_result} (Chosen character)")
         # print(f"Setting '{char_result}' to {font_name} char_code: {char_code}")
-        print(
-            f"From OCR results: {char_result} character: '{results}' was chosen"
-            + f" for font: '{font_name}' at place {char_code} (char_code)."
-        )
+        logger.info(f"Font '{font_name}' char code {char_code}: OCR results {results}, chosen '{char_result}'.")
         return char_result
 
     def _get_pdf_page_render(self, pdfix: Pdfix, page_index: int, page: PdfPage) -> Path:
