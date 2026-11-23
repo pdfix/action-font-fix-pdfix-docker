@@ -111,6 +111,75 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
+# @KA:action pdfix_generate_missing_unicode
+# @KA:desc Gives a Unicode value to characters of embedded fonts that have none, so the text can be read by screen
+# readers, searched and copied (PDF/UA, clause 7.21.7). Every such character is cut out of the rendered page and
+# recognised by OCR, and the recognised character is written into the font, so every use of that character in the
+# document gets it. The input file is not changed; the fixed PDF is saved as the output file.
+# @KA:context Run on the **whole document** when a PDF/UA validation reports a missing Unicode mapping (7.21.7), or when
+# text copied from the PDF is empty or garbled. Check the text afterwards, because OCR of single characters can confuse
+# similar characters. Runs locally in Docker and nothing leaves your computer; the first run downloads the image and
+# takes longer.
+# @KA:param input_pdf
+# @KA:desc PDF document to fix. It is only read, never changed.
+# @KA:problem "Input file must be an existing PDF document." (error 13)
+# @KA:solution The file shown in the message was not found or does not have the `.pdf` extension. Select an existing PDF
+# file.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
+# @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
+# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:param output_pdf
+# @KA:desc Where the fixed PDF is saved, a file with the `.pdf` extension. The folder must already exist; an existing
+# file with the same name is overwritten. Both are checked before the document is processed.
+# @KA:problem "Output file must be PDF document." (error 11)
+# @KA:solution Select an output file with the `.pdf` extension.
+# @KA:problem "Output folder does not exist." (error 12)
+# @KA:solution Create the folder shown in the message or select another output file.
+# @KA:problem "Failed to save PDF document." (error 25)
+# @KA:solution The fixed PDF could not be written. Check that the output folder is writable and that the file is not
+# open in another application.
+# @KA:param engine
+# @KA:desc OCR engine that recognises the single characters: **Tesseract** (default, fastest start), **Easy** (EasyOCR,
+# slower start) or **Rapid** (RapidOCR). All of them recognise English (Latin) characters only. Their results differ;
+# for example in tests Tesseract read `e` as `a`, while Easy and Rapid read `l` as `1` and `o` as `0`.
+# @KA:problem Recognised characters are wrong, for example `1` instead of `l` or `0` instead of `o`.
+# @KA:solution A single character has no surrounding word, so similar characters are confused. Run the action with
+# another OCR engine and compare the text, or correct the characters in a PDF editor.
+# @KA:param default
+# @KA:desc Character written to a character when OCR recognises nothing in any of its places (default: space).
+# Characters that draw nothing, like spaces, always get a space without OCR.
+# @KA:problem Some characters got the default character.
+# @KA:solution OCR could not read them, for example decorative, very small or non-Latin characters. Try another OCR
+# engine, or set the characters manually in a PDF editor.
+# @KA:logic Which characters are fixed
+# @KA:desc Only text in embedded fonts is checked, and only characters with no Unicode value (empty, U+FFFE or U+FEFF).
+# Characters that already have a Unicode value are kept, even when the value is wrong. Text in fonts that are not
+# embedded, text inside form XObjects (content reused on more pages) and text in annotations is not changed. Fonts with
+# the same name in different parts of the document are fixed separately.
+# @KA:problem Validation still reports a missing Unicode mapping (7.21.7) after the fix.
+# @KA:solution The remaining text uses a font that is not embedded, or it is inside a form XObject or an annotation,
+# which the action does not change. Embed the fonts when you create the PDF, or fix these characters in a PDF editor.
+# @KA:logic How characters are recognised
+# @KA:desc For every character without Unicode, up to 5 of its largest places are cut out of the page rendered at high
+# resolution and sent to the OCR engine. The most frequent result is used for all uses of the character. A character
+# that draws nothing gets a space without OCR. The log shows every character with its OCR results and the chosen
+# character.
+# @KA:problem "Failed to render PDF Page into image." (error 23)
+# @KA:solution A page cannot be drawn by PDFix SDK. Open and save the PDF again in a PDF editor and run the action
+# again.
+# @KA:logic What is not done
+# @KA:desc The action only adds missing Unicode values. Fonts that are not embedded, `.notdef` glyphs and other font
+# problems are not fixed; run **Fix Fonts (Callas)** for them, and validate the document again afterwards.
+# @KA:logic PDFix license
+# @KA:desc PDFix Desktop passes your PDFix license to the action automatically. Without a license the action runs in
+# trial mode, which adds watermarks and may redact random content in the output PDF.
+# @KA:problem The output PDF has watermarks or randomly redacted content.
+# @KA:solution Trial mode is active. Activate your PDFix license in PDFix Desktop and run the action again.
+# @KA:problem "Failed to authorize PDFix SDK account." and the next log line shows "PDFix SDK error 420" (error 22)
+# @KA:solution The license name or key is not valid. Check the license in PDFix Desktop settings.
+# @KA:problem "Failed to activate PDFix SDK account." and the next log line shows "PDFix SDK error 1205" (error 21)
+# @KA:solution The license key is not valid. Check the license in PDFix Desktop settings.
 def run_fontfixing_subcommand(args) -> None:
     check_output_file(args.output)
     check_input_file(args.input)
