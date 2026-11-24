@@ -18,6 +18,12 @@ success() { echo -e "${GREEN}$1${NC}"; }
 # Function to print error messages
 error() { echo -e "${RED}ERROR: $1${NC}"; }
 
+# Check if the required arguments are provided
+if [ "$#" -ne 2 ]; then
+    error "Usage: $0 <PDFIX_NAME> <PDFIX_KEY>"
+    exit 1
+fi
+
 # init
 pushd "$(dirname $0)" > /dev/
 
