@@ -25,7 +25,7 @@ if [ "$#" -ne 2 ]; then
 fi
 
 # init
-pushd "$(dirname $0)" > /dev/
+pushd "$(dirname $0)" > /dev/null
 
 EXIT_STATUS=0
 DOCKER_IMAGE="font-fix-pdfix:test"
