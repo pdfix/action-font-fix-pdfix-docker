@@ -259,7 +259,7 @@ def main() -> None:
     except Exception as e:
         logger.error("Failed to run the program:")
         logger.exception(e)
-        sys.exit(9)
+        sys.exit(1)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
@@ -285,7 +285,7 @@ def main() -> None:
             # not expected exception -> print stack trace and what exception happened
             logger.error("Failed to run the program:")
             logger.exception(e)
-            sys.exit(9)
+            sys.exit(1)
         finally:
             elapsed_time: float = time.time() - start_time
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
