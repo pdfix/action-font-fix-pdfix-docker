@@ -170,7 +170,7 @@ def get_pdfix_config(path: str) -> None:
 # resolution and sent to the OCR engine. The most frequent result is used for all uses of the character. A character
 # that draws nothing gets a space without OCR. The log shows every character with its OCR results and the chosen
 # character.
-# @KA:problem "Failed to render PDF Page into image." (error 23)
+# @KA:problem "Failed to render PDF page into image." (error 23)
 # @KA:solution A page cannot be drawn by PDFix SDK. Open and save the PDF again in a PDF editor and run the action
 # again.
 # @KA:logic What is not done
