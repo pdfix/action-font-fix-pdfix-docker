@@ -9,6 +9,8 @@ Fixes font issues where Unicode is missing for glyphs using OCR and the PDFix SD
   - [Usage](#usage)
   - [Commands](#commands)
   - [Arguments](#arguments)
+  - [How it works](#how-it-works)
+  - [Exit codes](#exit-codes)
   - [Examples](#examples)
   - [Help \& support](#help--support)
   - [Licenses](#licenses)
@@ -42,6 +44,30 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/font-fix-pdfix:latest <command>
 | `--key` | no | String (PDFix account license key) | PDFix license key |
 | `--engine` | no | One of: `Tesseract`, `Easy`, `Rapid` (default: `Tesseract`) | OCR engine |
 | `--default_char` | no | Single character string (default: space) | Character when OCR fails |
+
+## How it works
+
+- Every character of an embedded font without a Unicode value is cut out of the rendered page (up to 5 of its largest places), recognized by OCR (`--engine`) and the most frequent result is written into the font.
+- Characters that already have a Unicode value, fonts that are not embedded, form XObjects and annotations are not changed; a character OCR cannot read gets `--default_char`.
+- **Checks before processing:** output extension (11) and folder (12), input (13), then the PDFix license and opening the PDF (password 30).
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Unexpected error (`Failed to run the program:` + traceback) |
+| 10 | Failed to parse arguments. Please check the usage and try again |
+| 11 | Output file must be PDF document |
+| 12 | Output folder does not exist |
+| 13 | Input file must be an existing PDF document |
+| 20 | Failed to initialize PDFix SDK |
+| 21 | Failed to activate PDFix SDK account |
+| 22 | Failed to authorize PDFix SDK account |
+| 23 | Failed to render PDF page into image |
+| 24 | Failed to open PDF document |
+| 25 | Failed to save PDF document |
+| 30 | PDF document is password-protected. Remove the password with another action first |
 
 ## Examples
 
