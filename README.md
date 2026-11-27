@@ -37,6 +37,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/font-fix-pdfix:latest <command>
 |---|:---:|---|---|
 | `--input`, `-i` | yes | Path to an existing `.pdf` file | Input PDF |
 | `--output`, `-o` | yes | Path for the output `.pdf` file | Output PDF |
+| `--password` | no | String (default: empty) | Password to open a password-protected PDF |
 | `--name` | no | String (PDFix account license name) | PDFix license name |
 | `--key` | no | String (PDFix account license key) | PDFix license key |
 | `--engine` | no | One of: `Tesseract`, `Easy`, `Rapid` (default: `Tesseract`) | OCR engine |

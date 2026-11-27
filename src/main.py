@@ -60,6 +60,10 @@ def set_arguments(
                 parser.add_argument("--name", type=str, default="", nargs="?", help="PDFix license name")
             case "output":
                 parser.add_argument("--output", "-o", type=str, required=required_output, help=output_help)
+            case "password":
+                parser.add_argument(
+                    "--password", type=str, default="", help="Password to open a password-protected PDF document."
+                )
 
 
 def check_output_file(output_path: str) -> None:
@@ -127,8 +131,9 @@ def get_pdfix_config(path: str) -> None:
 # file.
 # @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
 # @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
-# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
-# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:problem "PDF document is password-protected. Remove the password with another action first." (error 30)
+# @KA:solution The PDF needs a password to open. Remove the password with another action or in a PDF editor and run the
+# action again. From the command line, pass the password with `--password`.
 # @KA:param output_pdf
 # @KA:desc Where the fixed PDF is saved, a file with the `.pdf` extension. The folder must already exist; an existing
 # file with the same name is overwritten. Both are checked before the document is processed.
@@ -183,7 +188,7 @@ def get_pdfix_config(path: str) -> None:
 def run_fontfixing_subcommand(args) -> None:
     check_output_file(args.output)
     check_input_file(args.input)
-    font_fixing(args.input, args.output, args.name, args.key, args.engine, args.default_char)
+    font_fixing(args.input, args.output, args.name, args.key, args.engine, args.default_char, args.password)
 
 
 def font_fixing(
@@ -193,6 +198,7 @@ def font_fixing(
     license_key: Optional[str],
     engine: str,
     default_char: str,
+    password: str = "",
 ) -> None:
     """
     Autotagging PDF document with provided arguments
@@ -204,9 +210,10 @@ def font_fixing(
         license_key (str): PDFix license key.
         engine (str): Name of OCR enginge.
         default_char (str): Which character to use when OCR fails.
+        password (str): Password of the PDF document, empty when it has none.
     """
     fixer: FixFontGlyphsUnicodesPdfix = FixFontGlyphsUnicodesPdfix(
-        license_name, license_key, input_path, output_path, engine, default_char
+        license_name, license_key, input_path, output_path, engine, default_char, password
     )
     fixer.fix_missing_unicode()
 
@@ -238,7 +245,7 @@ def main() -> None:
     )
     set_arguments(
         fontfixing_subparser,
-        ["name", "key", "input", "output", "engine", "default_char"],
+        ["name", "key", "input", "output", "password", "engine", "default_char"],
         True,
         "The output PDF file.",
     )

@@ -68,7 +68,8 @@
                 "22": "Failed to authorize PDFix SDK account.",
                 "23": "Failed to render PDF Page into image.",
                 "24": "Failed to open PDF document.",
-                "25": "Failed to save PDF document."
+                "25": "Failed to save PDF document.",
+                "30": "PDF document is password-protected. Remove the password with another action first."
             },
             "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         }

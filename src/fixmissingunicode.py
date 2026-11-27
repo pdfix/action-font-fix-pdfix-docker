@@ -20,7 +20,13 @@ from pdfixsdk import (
 )
 from tqdm import tqdm
 
-from exceptions import PdfixFailedToOpenException, PdfixFailedToSaveException, PdfixInitializeException
+from constants import SDK_ERROR_INVALID_PASSWORD
+from exceptions import (
+    PdfixFailedToOpenException,
+    PdfixFailedToSaveException,
+    PdfixInitializeException,
+    PdfPasswordException,
+)
 from logger import get_logger
 from ocr import OCR
 from page_render import crop_image, is_blank_image, render_page
@@ -115,6 +121,7 @@ class FixFontGlyphsUnicodesPdfix:
         output_path: str,
         engine: str,
         default_character: str,
+        password: str = "",
     ) -> None:
         """
         Initialize class for fixing fonts.
@@ -126,6 +133,7 @@ class FixFontGlyphsUnicodesPdfix:
             output_path (str): Path where fixed PDF should be saved.
             engine (str): Name of OCR enginge.
             default_character (str): Which character to use when OCR fails.
+            password (str): Password of the PDF document, empty when it has none.
         """
         self.license_name: Optional[str] = license_name
         self.license_key: Optional[str] = license_key
@@ -133,6 +141,7 @@ class FixFontGlyphsUnicodesPdfix:
         self.output_file_str_path: str = output_path
         self.engine: str = engine
         self.default_character: str = default_character
+        self.password: str = password
         self.cached_renders: dict[int, Path] = {}
         # self.font_info: dict[str, tuple[PdfFont, set[int]]] = {}
 
@@ -154,8 +163,10 @@ class FixFontGlyphsUnicodesPdfix:
                 authorize_sdk(pdfix, self.license_name, self.license_key)
 
                 # Open the document
-                doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_file_str_path, "")
+                doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_file_str_path, self.password)
                 if doc is None:
+                    if pdfix.GetErrorType() == SDK_ERROR_INVALID_PASSWORD:
+                        raise PdfPasswordException(pdfix, self.input_file_str_path)
                     raise PdfixFailedToOpenException(pdfix, self.input_file_str_path)
 
                 try:

@@ -12,6 +12,8 @@ EC_PDFIX_FAILED_TO_RENDER: int = 23
 EC_PDFIX_FAILED_TO_OPEN: int = 24
 EC_PDFIX_FAILED_TO_SAVE: int = 25
 
+EC_PDF_PASSWORD: int = 30
+
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
 MESSAGE_ARG_OUTPUT_NOT_PDF: str = "Output file must be PDF document."
 MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS: str = "Output folder does not exist."
@@ -23,6 +25,8 @@ MESSAGE_PDFIX_AUTHORIZATION_FAILED: str = "Failed to authorize PDFix SDK account
 MESSAGE_PDFIX_FAILED_TO_RENDER: str = "Failed to render PDF Page into image."
 MESSAGE_PDFIX_FAILED_TO_OPEN: str = "Failed to open PDF document."
 MESSAGE_PDFIX_FAILED_TO_SAVE: str = "Failed to save PDF document."
+
+MESSAGE_PDF_PASSWORD: str = "PDF document is password-protected. Remove the password with another action first."
 
 
 def format_sdk_error(pdfix: Pdfix) -> str:
@@ -112,3 +116,8 @@ class PdfixFailedToOpenException(PdfixException):
 class PdfixFailedToSaveException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
         super().__init__(pdfix, EC_PDFIX_FAILED_TO_SAVE, f"{MESSAGE_PDFIX_FAILED_TO_SAVE} {message}")
+
+
+class PdfPasswordException(PdfixException):
+    def __init__(self, pdfix: Pdfix, pdf_path: str = "") -> None:
+        super().__init__(pdfix, EC_PDF_PASSWORD, f"{MESSAGE_PDF_PASSWORD} {pdf_path}")
